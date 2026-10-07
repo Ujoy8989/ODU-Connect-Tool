@@ -1,1 +1,52 @@
+name: Build ODU Connect Tool V2
 
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find and extract V2 ZIP
+        shell: bash
+        run: |
+          set -e
+
+          ZIP_FILE=$(find . -maxdepth 2 -type f -iname "*.zip" | head -n 1)
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ERROR: No ZIP file found."
+            exit 1
+          fi
+
+          echo "Using ZIP: $ZIP_FILE"
+
+          mkdir -p project
+          unzip -q "$ZIP_FILE" -d project
+
+          echo "Extracted files:"
+          find project -maxdepth 3 -type f | head -100
+
+      - name: Locate Android project
+        shell: bash
+        run: |
+          set -e
+
+          PROJECT_DIR=""
+
+          if [ -f "project/settings.gradle.kts" ] || [ -f "project/settings.gradle" ]; then
+            PROJECT_DIR="project"
+          else
+            SETTINGS=$(find project -type f \
+              -name "settings.gradle.kts" -o \
+              -name "settings.gradle" \
+            | head -n 1)
+
+            if [ -
